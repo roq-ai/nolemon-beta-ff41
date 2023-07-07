@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model appointment {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  time       DateTime? @db.Timestamp(6)
+  shop_id    String?   @db.Uuid
+  created_at DateTime  @default(now()) @db.Timestamp(6)
+  updated_at DateTime  @default(now()) @db.Timestamp(6)
+  shop       shop?     @relation(fields: [shop_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model customer {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profile    String?  @db.VarChar(255)
+  shop_id    String?  @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @db.Timestamp(6)
+  shop       shop?    @relation(fields: [shop_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model invoice {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  amount     Int?
+  shop_id    String?  @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @db.Timestamp(6)
+  shop       shop?    @relation(fields: [shop_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model repair_order {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  status        String?     @db.VarChar(255)
+  technician_id String?     @db.Uuid
+  shop_id       String?     @db.Uuid
+  created_at    DateTime    @default(now()) @db.Timestamp(6)
+  updated_at    DateTime    @default(now()) @db.Timestamp(6)
+  shop          shop?       @relation(fields: [shop_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  technician    technician? @relation(fields: [technician_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model shop {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  description  String?        @db.VarChar(255)
+  image        String?        @db.VarChar(255)
+  name         String         @db.VarChar(255)
+  created_at   DateTime       @default(now()) @db.Timestamp(6)
+  updated_at   DateTime       @default(now()) @db.Timestamp(6)
+  user_id      String         @db.Uuid
+  tenant_id    String         @db.VarChar(255)
+  appointment  appointment[]
+  customer     customer[]
+  invoice      invoice[]
+  repair_order repair_order[]
+  user         user           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model technician {
+  id                String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  efficiency_rating Int?
+  user_id           String?        @db.Uuid
+  created_at        DateTime       @default(now()) @db.Timestamp(6)
+  updated_at        DateTime       @default(now()) @db.Timestamp(6)
+  repair_order      repair_order[]
+  user              user?          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email       String       @unique @db.VarChar(255)
+  firstName   String?      @db.VarChar(255)
+  lastName    String?      @db.VarChar(255)
+  roq_user_id String       @db.VarChar(255)
+  tenant_id   String       @db.VarChar(255)
+  created_at  DateTime     @default(now()) @db.Timestamp(6)
+  updated_at  DateTime     @default(now()) @db.Timestamp(6)
+  shop        shop[]
+  technician  technician[]
+}
